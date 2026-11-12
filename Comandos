@@ -1,1 +1,420 @@
 
+root@controlplane:~$
+mkdir -p simulado-nuvem/manifests simulado-nuvem/scripts simulado-nuvem/evidencias
+cd simulado-nuvem
+
+cat > scripts/comandos.sh <<'EOF'
+#!/bin/bash
+set -o pipefail
+
+mkdir -p manifests scripts evidencias
+exec > >(tee -a evidencias/resultados.md) 2>&1
+
+echo "===== SIMULADO PRÁTICO DE COMPUTAÇÃO EM NUVEM ====="
+date
+
+# ETAPA 1 - CLUSTER E NAMESPACE
+echo "===== ETAPA 1: CLUSTER ====="
+kubectl get nodes
+kubectl create namespace simulado-nuvem --dry-run=client -o yaml | kubectl apply -f -
+kubectl get namespace simulado-nuvem
+
+# ETAPA 2 - CONFIGMAP V1
+echo "===== ETAPA 2: CONFIGMAP V1 ====="
+cat > manifests/01-configmap-v1.yaml <<'YAML'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pagina
+  namespace: simulado-nuvem
+data:
+  index.html: |
+    <h1>Simulado Cloud - Versao 1</h1>
+YAML
+
+kubectl apply -f manifests/01-configmap-v1.yaml
+
+# SECRET FICTICIO
+kubectl -n simulado-nuvem create secret generic senha-app \
+  --from-literal=token=valor-ficticio-2026 \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+echo "Secret criado. Valor não será exibido."
+
+# ETAPA 2 - RBAC
+echo "===== ETAPA 2: RBAC ====="
+cat > manifests/03-rbac.yaml <<'YAML'
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: leitor-web
+bash scripts/comandos.shs.shultados.md"e-webimeout=180sp://webout=120stamprueetadata.name}')
+===== SIMULADO PRÁTICO DE COMPUTAÇÃO EM NUVEM =====
+Wed Nov 11 23:53:51 UTC 2026
+===== ETAPA 1: CLUSTER =====
+NAME           STATUS   ROLES           AGE     VERSION
+controlplane   Ready    control-plane   6d12h   v1.37.1
+node01         Ready    <none>          6d12h   v1.37.1
+namespace/simulado-nuvem created
+NAME             STATUS   AGE
+simulado-nuvem   Active   0s
+===== ETAPA 2: CONFIGMAP V1 =====
+configmap/pagina created
+secret/senha-app created
+Secret criado. Valor não será exibido.
+===== ETAPA 2: RBAC =====
+serviceaccount/leitor-web created
+role.rbac.authorization.k8s.io/leitura-pods created
+rolebinding.rbac.authorization.k8s.io/leitor-web-binding created
+Permissão para listar:
+yes
+Permissão para excluir:
+no
+===== ETAPA 3: APLICACAO =====
+deployment.apps/web created
+service/web created
+Waiting for deployment spec update to be observed...
+Waiting for deployment "web" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "web" rollout to finish: 1 of 2 updated replicas are available...
+deployment "web" successfully rolled out
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/web   2/2     2            2           14s
+
+NAME                       READY   STATUS    RESTARTS   AGE
+pod/web-7ccd78c5d4-ktmxj   1/1     Running   0          14s
+pod/web-7ccd78c5d4-shdrv   1/1     Running   0          14s
+
+NAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/web   ClusterIP   10.99.146.68   <none>        80/TCP    14s
+===== ETAPA 4: TESTE HTTP =====
+pod/cliente created
+pod/cliente condition met
+Resposta HTTP da aplicação:
+<h1>Simulado Cloud - Versao 1</h1>
+Descrição do Deployment:
+Name:                   web
+Namespace:              simulado-nuvem
+CreationTimestamp:      Wed, 11 Nov 2026 23:53:52 +0000
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=web
+Replicas:               2 desired | 2 updated | 2 total | 2 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:           app=web
+  Service Account:  leitor-web
+  Containers:
+   nginx:
+    Image:      nginx:alpine
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Liveness:   http-get http://:80/ delay=5s timeout=1s period=10s successThreshold=1 failureThreshold=3
+    Readiness:  http-get http://:80/index.html delay=3s timeout=1s period=5s successThreshold=1 failureThreshold=3
+    Environment:
+      TOKEN_TESTE:  <set to the key 'token' in secret 'senha-app'>  Optional: false
+    Mounts:
+      /usr/share/nginx/html from pagina (rw)
+  Volumes:
+   pagina:
+    Type:          ConfigMap (a volume populated by a ConfigMap)
+    Name:          pagina
+    Optional:      false
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   web-7ccd78c5d4 (2/2 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  18s   deployment-controller  Scaled up replica set web-7ccd78c5d4 from 0 to 2
+Logs dos Pods:
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/11/11 23:53:59 [notice] 1#1: using the "epoll" event method
+2026/11/11 23:53:59 [notice] 1#1: nginx/1.31.8
+2026/11/11 23:53:59 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0)
+2026/11/11 23:53:59 [notice] 1#1: OS: Linux 6.8.0-147-generic
+2026/11/11 23:53:59 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+2026/11/11 23:53:59 [notice] 1#1: start worker processes
+2026/11/11 23:53:59 [notice] 1#1: start worker process 30
+192.168.1.92 - - [11/Nov/2026:23:54:06 +0000] "GET /index.html HTTP/1.1" 200 35 "-" "kube-probe/1.37" "-"
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/11/11 23:54:00 [notice] 1#1: using the "epoll" event method
+2026/11/11 23:54:00 [notice] 1#1: nginx/1.31.8
+2026/11/11 23:54:00 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0)
+2026/11/11 23:54:00 [notice] 1#1: OS: Linux 6.8.0-147-generic
+2026/11/11 23:54:00 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+2026/11/11 23:54:00 [notice] 1#1: start worker processes
+2026/11/11 23:54:00 [notice] 1#1: start worker process 30
+192.168.1.92 - - [11/Nov/2026:23:54:06 +0000] "GET /index.html HTTP/1.1" 200 35 "-" "kube-probe/1.37" "-"
+192.168.1.176 - - [11/Nov/2026:23:54:10 +0000] "GET / HTTP/1.1" 200 35 "-" "Wget" "-"
+Estado dos Pods:
+NAME                   READY   STATUS    RESTARTS   AGE
+cliente                1/1     Running   0          4s
+web-7ccd78c5d4-ktmxj   1/1     Running   0          18s
+web-7ccd78c5d4-shdrv   1/1     Running   0          18s
+Eventos:
+LAST SEEN   TYPE     REASON              OBJECT                      MESSAGE
+18s         Normal   Scheduled           pod/web-7ccd78c5d4-shdrv    Successfully assigned simulado-nuvem/web-7ccd78c5d4-shdrv to node01
+18s         Normal   ScalingReplicaSet   deployment/web              Scaled up replica set web-7ccd78c5d4 from 0 to 2
+18s         Normal   SuccessfulCreate    replicaset/web-7ccd78c5d4   Created pod: web-7ccd78c5d4-ktmxj
+18s         Normal   SuccessfulCreate    replicaset/web-7ccd78c5d4   Created pod: web-7ccd78c5d4-shdrv
+18s         Normal   Scheduled           pod/web-7ccd78c5d4-ktmxj    Successfully assigned simulado-nuvem/web-7ccd78c5d4-ktmxj to node01
+15s         Normal   Pulling             pod/web-7ccd78c5d4-shdrv    Pulling image "nginx:alpine"
+15s         Normal   Pulling             pod/web-7ccd78c5d4-ktmxj    Pulling image "nginx:alpine"
+11s         Normal   Pulled              pod/web-7ccd78c5d4-ktmxj    Successfully pulled image "nginx:alpine" in 4.093s (4.093s including waiting). Image size: 26368486 bytes.
+11s         Normal   Created             pod/web-7ccd78c5d4-ktmxj    Container created
+11s         Normal   Started             pod/web-7ccd78c5d4-ktmxj    Container started
+10s         Normal   Pulled              pod/web-7ccd78c5d4-shdrv    Successfully pulled image "nginx:alpine" in 522ms (4.567s including waiting). Image size: 26368486 bytes.
+10s         Normal   Created             pod/web-7ccd78c5d4-shdrv    Container created
+10s         Normal   Started             pod/web-7ccd78c5d4-shdrv    Container started
+4s          Normal   Scheduled           pod/cliente                 Successfully assigned simulado-nuvem/cliente to node01
+3s          Normal   Pulling             pod/cliente                 Pulling image "busybox:1.36"
+0s          Normal   Started             pod/cliente                 Container started
+0s          Normal   Created             pod/cliente                 Container created
+0s          Normal   Pulled              pod/cliente                 Successfully pulled image "busybox:1.36" in 2.572s (2.572s including waiting). Image size: 2217006 bytes.
+===== ETAPA 5: ESCALA =====
+deployment.apps/web scaled
+Waiting for deployment "web" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 2 of 3 updated replicas are available...
+deployment "web" successfully rolled out
+NAME                   READY   STATUS    RESTARTS   AGE
+cliente                1/1     Running   0          12s
+web-7ccd78c5d4-gzt4t   1/1     Running   0          8s
+web-7ccd78c5d4-ktmxj   1/1     Running   0          26s
+web-7ccd78c5d4-shdrv   1/1     Running   0          26s
+Voltando para duas réplicas:
+deployment.apps/web scaled
+deployment "web" successfully rolled out
+NAME                   READY   STATUS        RESTARTS   AGE
+cliente                1/1     Running       0          12s
+web-7ccd78c5d4-gzt4t   1/1     Terminating   0          8s
+web-7ccd78c5d4-ktmxj   1/1     Running       0          26s
+web-7ccd78c5d4-shdrv   1/1     Running       0          26s
+Excluindo somente um Pod da aplicação:
+Pod excluído: web-7ccd78c5d4-gzt4t
+pod "web-7ccd78c5d4-gzt4t" deleted from simulado-nuvem namespace
+Aguardando reposição:
+deployment "web" successfully rolled out
+NAME                   READY   STATUS    RESTARTS   AGE
+cliente                1/1     Running   0          13s
+web-7ccd78c5d4-ktmxj   1/1     Running   0          27s
+web-7ccd78c5d4-shdrv   1/1     Running   0          27s
+Testando novamente o Service:
+<h1>Simulado Cloud - Versao 1</h1>
+===== ETAPA 6: ATUALIZACAO V2 =====
+configmap/pagina configured
+deployment.apps/web restarted
+Waiting for deployment spec update to be observed...
+Waiting for deployment "web" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+deployment "web" successfully rolled out
+Confirmando versão 2:
+<h1>Simulado Cloud - Versao 2</h1>
+===== ETAPA 6: FALHA INTENCIONAL =====
+deployment.apps/web image updated
+Aguardando e registrando a falha:
+Waiting for deployment "web" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 2 new replicas have been updated...
+error: timed out waiting for the condition
+NAME                   READY   STATUS         RESTARTS   AGE
+cliente                1/1     Running        0          72s
+web-56d4ff88d5-q7xq7   1/1     Running        0          58s
+web-56d4ff88d5-xdvdp   1/1     Running        0          52s
+web-79945c657b-ztpn4   0/1     ErrImagePull   0          46s
+Name:                   web
+Namespace:              simulado-nuvem
+CreationTimestamp:      Wed, 11 Nov 2026 23:53:52 +0000
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 3
+Selector:               app=web
+Replicas:               2 desired | 1 updated | 3 total | 2 available | 1 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:           app=web
+  Annotations:      kubectl.kubernetes.io/restartedAt: 2026-11-11T23:54:19Z
+  Service Account:  leitor-web
+  Containers:
+   nginx:
+    Image:      nginx:tag-inexistente-simulado
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Liveness:   http-get http://:80/ delay=5s timeout=1s period=10s successThreshold=1 failureThreshold=3
+    Readiness:  http-get http://:80/index.html delay=3s timeout=1s period=5s successThreshold=1 failureThreshold=3
+    Environment:
+      TOKEN_TESTE:  <set to the key 'token' in secret 'senha-app'>  Optional: false
+    Mounts:
+      /usr/share/nginx/html from pagina (rw)
+  Volumes:
+   pagina:
+    Type:          ConfigMap (a volume populated by a ConfigMap)
+    Name:          pagina
+    Optional:      false
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    ReplicaSetUpdated
+OldReplicaSets:  web-7ccd78c5d4 (0/0 replicas created), web-56d4ff88d5 (2/2 replicas created)
+NewReplicaSet:   web-79945c657b (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  86s   deployment-controller  Scaled up replica set web-7ccd78c5d4 from 0 to 2
+  Normal  ScalingReplicaSet  68s   deployment-controller  Scaled up replica set web-7ccd78c5d4 from 2 to 3
+  Normal  ScalingReplicaSet  60s   deployment-controller  Scaled down replica set web-7ccd78c5d4 from 3 to 2
+  Normal  ScalingReplicaSet  58s   deployment-controller  Scaled up replica set web-56d4ff88d5 from 0 to 1
+  Normal  ScalingReplicaSet  52s   deployment-controller  Scaled down replica set web-7ccd78c5d4 from 2 to 1
+  Normal  ScalingReplicaSet  52s   deployment-controller  Scaled up replica set web-56d4ff88d5 from 1 to 2
+  Normal  ScalingReplicaSet  46s   deployment-controller  Scaled down replica set web-7ccd78c5d4 from 1 to 0
+  Normal  ScalingReplicaSet  46s   deployment-controller  Scaled up replica set web-79945c657b from 0 to 1
+LAST SEEN   TYPE      REASON              OBJECT                      MESSAGE
+86s         Normal    Scheduled           pod/web-7ccd78c5d4-ktmxj    Successfully assigned simulado-nuvem/web-7ccd78c5d4-ktmxj to node01
+86s         Normal    ScalingReplicaSet   deployment/web              Scaled up replica set web-7ccd78c5d4 from 0 to 2
+86s         Normal    Scheduled           pod/web-7ccd78c5d4-shdrv    Successfully assigned simulado-nuvem/web-7ccd78c5d4-shdrv to node01
+86s         Normal    SuccessfulCreate    replicaset/web-7ccd78c5d4   Created pod: web-7ccd78c5d4-ktmxj
+86s         Normal    SuccessfulCreate    replicaset/web-7ccd78c5d4   Created pod: web-7ccd78c5d4-shdrv
+83s         Normal    Pulling             pod/web-7ccd78c5d4-shdrv    Pulling image "nginx:alpine"
+83s         Normal    Pulling             pod/web-7ccd78c5d4-ktmxj    Pulling image "nginx:alpine"
+79s         Normal    Pulled              pod/web-7ccd78c5d4-ktmxj    Successfully pulled image "nginx:alpine" in 4.093s (4.093s including waiting). Image size: 26368486 bytes.
+79s         Normal    Created             pod/web-7ccd78c5d4-ktmxj    Container created
+79s         Normal    Started             pod/web-7ccd78c5d4-ktmxj    Container started
+78s         Normal    Started             pod/web-7ccd78c5d4-shdrv    Container started
+78s         Normal    Created             pod/web-7ccd78c5d4-shdrv    Container created
+78s         Normal    Pulled              pod/web-7ccd78c5d4-shdrv    Successfully pulled image "nginx:alpine" in 522ms (4.567s including waiting). Image size: 26368486 bytes.
+72s         Normal    Scheduled           pod/cliente                 Successfully assigned simulado-nuvem/cliente to node01
+71s         Normal    Pulling             pod/cliente                 Pulling image "busybox:1.36"
+68s         Normal    Scheduled           pod/web-7ccd78c5d4-gzt4t    Successfully assigned simulado-nuvem/web-7ccd78c5d4-gzt4t to node01
+68s         Normal    SuccessfulCreate    replicaset/web-7ccd78c5d4   Created pod: web-7ccd78c5d4-gzt4t
+68s         Normal    ScalingReplicaSet   deployment/web              Scaled up replica set web-7ccd78c5d4 from 2 to 3
+68s         Normal    Started             pod/cliente                 Container started
+68s         Normal    Created             pod/cliente                 Container created
+68s         Normal    Pulled              pod/cliente                 Successfully pulled image "busybox:1.36" in 2.572s (2.572s including waiting). Image size: 2217006 bytes.
+67s         Normal    Started             pod/web-7ccd78c5d4-gzt4t    Container started
+67s         Normal    Pulled              pod/web-7ccd78c5d4-gzt4t    Container image "nginx:alpine" already present on machine and can be accessed by the pod
+67s         Normal    Created             pod/web-7ccd78c5d4-gzt4t    Container created
+60s         Normal    ScalingReplicaSet   deployment/web              Scaled down replica set web-7ccd78c5d4 from 3 to 2
+60s         Normal    SuccessfulDelete    replicaset/web-7ccd78c5d4   Deleted pod: web-7ccd78c5d4-gzt4t
+60s         Normal    Killing             pod/web-7ccd78c5d4-gzt4t    Stopping container nginx
+58s         Normal    Scheduled           pod/web-56d4ff88d5-q7xq7    Successfully assigned simulado-nuvem/web-56d4ff88d5-q7xq7 to node01
+58s         Normal    ScalingReplicaSet   deployment/web              Scaled up replica set web-56d4ff88d5 from 0 to 1
+58s         Normal    Pulled              pod/web-56d4ff88d5-q7xq7    Container image "nginx:alpine" already present on machine and can be accessed by the pod
+58s         Normal    SuccessfulCreate    replicaset/web-56d4ff88d5   Created pod: web-56d4ff88d5-q7xq7
+58s         Normal    Created             pod/web-56d4ff88d5-q7xq7    Container created
+58s         Normal    Started             pod/web-56d4ff88d5-q7xq7    Container started
+52s         Normal    ScalingReplicaSet   deployment/web              Scaled down replica set web-7ccd78c5d4 from 2 to 1
+52s         Normal    Scheduled           pod/web-56d4ff88d5-xdvdp    Successfully assigned simulado-nuvem/web-56d4ff88d5-xdvdp to node01
+52s         Normal    SuccessfulDelete    replicaset/web-7ccd78c5d4   Deleted pod: web-7ccd78c5d4-shdrv
+52s         Normal    SuccessfulCreate    replicaset/web-56d4ff88d5   Created pod: web-56d4ff88d5-xdvdp
+52s         Normal    ScalingReplicaSet   deployment/web              Scaled up replica set web-56d4ff88d5 from 1 to 2
+52s         Normal    Killing             pod/web-7ccd78c5d4-shdrv    Stopping container nginx
+51s         Normal    Created             pod/web-56d4ff88d5-xdvdp    Container created
+51s         Normal    Started             pod/web-56d4ff88d5-xdvdp    Container started
+51s         Normal    Pulled              pod/web-56d4ff88d5-xdvdp    Container image "nginx:alpine" already present on machine and can be accessed by the pod
+46s         Normal    ScalingReplicaSet   deployment/web              Scaled down replica set web-7ccd78c5d4 from 1 to 0
+46s         Normal    SuccessfulCreate    replicaset/web-79945c657b   Created pod: web-79945c657b-ztpn4
+46s         Normal    Killing             pod/web-7ccd78c5d4-ktmxj    Stopping container nginx
+46s         Normal    SuccessfulDelete    replicaset/web-7ccd78c5d4   Deleted pod: web-7ccd78c5d4-ktmxj
+46s         Normal    ScalingReplicaSet   deployment/web              Scaled up replica set web-79945c657b from 0 to 1
+27s         Normal    Pulling             pod/web-79945c657b-ztpn4    Pulling image "nginx:tag-inexistente-simulado"
+45s         Normal    Scheduled           pod/web-79945c657b-ztpn4    Successfully assigned simulado-nuvem/web-79945c657b-ztpn4 to node01
+27s         Warning   Failed              pod/web-79945c657b-ztpn4    Error: ErrImagePull
+27s         Warning   Failed              pod/web-79945c657b-ztpn4    Failed to pull image "nginx:tag-inexistente-simulado": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:tag-inexistente-simulado": failed to resolve image: docker.io/library/nginx:tag-inexistente-simulado: not found
+11s         Normal    BackOff             pod/web-79945c657b-ztpn4    Back-off pulling image "nginx:tag-inexistente-simulado"
+11s         Warning   Failed              pod/web-79945c657b-ztpn4    Error: ImagePullBackOff
+===== ETAPA 6: ROLLBACK =====
+Warning: resource deployments/web was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/web rolled back
+Waiting for deployment spec update to be observed...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+deployment "web" successfully rolled out
+Verificando saúde após rollback:
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/web   2/2     2            2           86s
+
+NAME                       READY   STATUS        RESTARTS   AGE
+pod/cliente                1/1     Running       0          72s
+pod/web-56d4ff88d5-q7xq7   1/1     Running       0          58s
+pod/web-56d4ff88d5-xdvdp   1/1     Running       0          52s
+pod/web-79945c657b-ztpn4   0/1     Terminating   0          46s
+<h1>Simulado Cloud - Versao 2</h1>
+===== ETAPA 7: CRONJOB =====
+cronjob.batch/verifica-web created
+Criando Job imediato:
+job.batch/teste-web created
+job.batch/teste-web condition met
+Resultado do Job:
+NAME        STATUS     COMPLETIONS   DURATION   AGE
+teste-web   Complete   1/1           3s         4s
+<h1>Simulado Cloud - Versao 2</h1>
+===== RESULTADO FINAL =====
+NAME                       READY   STATUS      RESTARTS   AGE
+pod/cliente                1/1     Running     0          76s
+pod/teste-web-v8dhr        0/1     Completed   0          4s
+pod/web-56d4ff88d5-q7xq7   1/1     Running     0          62s
+pod/web-56d4ff88d5-xdvdp   1/1     Running     0          56s
+
+NAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/web   ClusterIP   10.99.146.68   <none>        80/TCP    90s
+
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/web   2/2     2            2           90s
+
+NAME                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/web-56d4ff88d5   2         2         2       62s
+replicaset.apps/web-79945c657b   0         0         0       50s
+replicaset.apps/web-7ccd78c5d4   0         0         0       90s
+
+NAME                         SCHEDULE      TIMEZONE   SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+cronjob.batch/verifica-web   */5 * * * *   <none>     False     0        <none>          4s
+
+NAME                  STATUS     COMPLETIONS   DURATION   AGE
+job.batch/teste-web   Complete   1/1           3s         4s
+NAME           STATUS   ROLES           AGE     VERSION
+controlplane   Ready    control-plane   6d12h   v1.37.1
+node01         Ready    <none>          6d12h   v1.37.1
+NAME             STATUS   AGE
+simulado-nuvem   Active   91s
+===== SIMULADO FINALIZADO =====
+Confira evidencias/resultados.md
+
+find . -maxdepth 3 -type f
+./scripts/comandos.sh
+./evidencias/resultados.md
+./manifests/02-configmap-v2.yaml
+./manifests/04-web.yaml
+./manifests/05-cronjob.yaml
+./manifests/01-configmap-v1.yaml
+./manifests/03-rbac.yaml
